@@ -18,7 +18,7 @@ export default function RootLayout({ children }) {
           <>
             <SideBarContainer />
           </>
-          <div className="w-full">
+          <div className="flex w-full flex-col">
             <>
               <HeaderWrapper />
             </>
