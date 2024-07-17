@@ -2,13 +2,11 @@ const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 const bcrypt = require("bcrypt");
 
-const findUserByDeptId = async (user_credential) => {
-  const { deptId } = user_credential;
-
+const findUserByDeptId = async ({ username, password }) => {
   try {
     const findUser = await prisma.departmentInformation.findUnique({
       where: {
-        deptId: deptId,
+        deptId: username,
       },
       select: {
         deptId: true,
@@ -16,7 +14,7 @@ const findUserByDeptId = async (user_credential) => {
     });
     const findAdmin = await prisma.adminInformation.findUnique({
       where: {
-        adminId: deptId,
+        adminId: username,
       },
       select: {
         adminId: true,
@@ -26,22 +24,24 @@ const findUserByDeptId = async (user_credential) => {
       return { status: 404, message: "Invalid department ID." };
     }
 
-    const authPassword = await authenticatePassword(user_credential);
+    const authPassword = await authenticatePassword({ username, password });
     return authPassword;
   } catch (err) {
-    console.log(err);
+    console.log("Caught Error on Authentifate-user.js file 2: ", err);
+    return { status: 500, message: "Internal Server Error" };
+  } finally {
+    prisma.$disconnect();
   }
 };
 
 // check password
-const authenticatePassword = async (user_credential) => {
-  const { deptId, password } = user_credential;
+const authenticatePassword = async ({ username, password }) => {
   let userData;
   try {
     // check department table
     const findUser = await prisma.departmentInformation.findUnique({
       where: {
-        deptId: deptId,
+        deptId: username,
       },
     });
     userData = findUser;
@@ -49,7 +49,7 @@ const authenticatePassword = async (user_credential) => {
     if (!findUser) {
       const findAdmin = await prisma.adminInformation.findUnique({
         where: {
-          adminId: deptId,
+          adminId: username,
         },
       });
       userData = findAdmin;
@@ -60,9 +60,14 @@ const authenticatePassword = async (user_credential) => {
       return { status: 401, message: "Invalid password." };
     }
 
-    return userData;
+    return { status: 200, userData };
   } catch (err) {
-    return { status: 500, message: "Internal Server Error" };
+    console.log("Caught Error on Authentifate-user.js file 1 : ", err);
+
+    return {
+      status: 500,
+      message: "Internal Server Error. Please Contact Admin",
+    };
   } finally {
     prisma.$disconnect();
   }

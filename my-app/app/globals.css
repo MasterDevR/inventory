@@ -2,6 +2,9 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --sadness-color: #3949ae;
+}
 * {
   box-sizing: border-box;
   padding: 0%;
